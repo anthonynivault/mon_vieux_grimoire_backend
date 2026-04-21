@@ -6,6 +6,8 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
+const Book = require('./models/Book');
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(err => console.log('Erreur MongoDB :', err));
@@ -20,42 +22,37 @@ app.use((req, res, next) => {
 });
 
 app.post('/api/books', (req, res, next) => {
-  console.log(req.body);
-  res.status(201).json({
-    message: 'Livre ajouté !'
+  delete req.body._id;
+  const book = new Book({
+    ...req.body
   });
+  book.save()
+    .then(() => res.status(201).json({ message: 'Livre ajouté !'}))
+    .catch(error => res.status(400).json({ error }));
+});
+
+app.put('/api/books/:id', (req, res, next) => {
+  Book.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+    .then(() => res.status(200).json({ message: 'Livre modifié !'}))
+    .catch(error => res.status(400).json({ error }));
+});
+
+app.delete('/api/books/:id', (req, res, next) => {
+  Book.deleteOne({ _id: req.params.id })
+    .then(() => res.status(200).json({ message: 'Livre supprimé !'}))
+    .catch(error => res.status(400).json({ error }));
+});
+
+app.get('/api/books/:id', (req, res, next) => {
+  Book.findOne({ _id: req.params.id })
+    .then(book => res.status(200).json(book))
+    .catch(error => res.status(404).json({ error }));
 });
 
 app.get('/api/books', (req, res, next) => {
-  const books = [
-    {
-      userId: 'user123',
-      title: 'Le Seigneur des Anneaux',
-      author: 'J.R.R. Tolkien',
-      imageUrl: 'https://example.com/lotr.jpg',
-      year: 1954,
-      genre: 'Fantasy',
-      ratings: [
-        { userId: 'user456', grade: 5 },
-        { userId: 'user789', grade: 4 }
-      ],
-      averageRating: 4.5
-    },
-    {
-      userId: 'user456',
-      title: '1984',
-      author: 'George Orwell',
-      imageUrl: 'https://example.com/1984.jpg',
-      year: 1949,
-      genre: 'Dystopie',
-      ratings: [
-        { userId: 'user123', grade: 5 }
-      ],
-      averageRating: 5
-    }
-  ];
-
-  res.status(200).json(books);
+  Book.find()
+    .then(books => res.status(200).json(books))
+    .catch(error => res.status(400).json({ error }));
 });
 
 module.exports = app;
