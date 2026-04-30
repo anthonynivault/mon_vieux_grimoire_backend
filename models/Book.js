@@ -5,7 +5,7 @@ const ratingSchema = mongoose.Schema({
   grade: { type: Number, required: true, min: 0, max: 5 }});
 
 const bookSchema = mongoose.Schema({
-  userId: { type: String, required: true }, // créateur du livre
+  userId: { type: String, required: true },
   title: { type: String, required: true },
   author: { type: String, required: true },
   imageUrl: { type: String, required: true },
